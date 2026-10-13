@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisGuard | Central Cyber Threat Detection Platform</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-brand">
+            <div class="brand-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="pulse-ring"></span>
+            </div>
+            <div>
+                <div class="brand-title">AEGIS<span class="highlight">GUARD</span></div>
+                <div class="brand-subtitle">Central Threat Detection &amp; Security Platform</div>
+            </div>
+        </div>
+
+        <div class="nav-status-group">
+            <div class="threat-level-badge" id="hudThreatLevel">
+                <span class="threat-dot"></span>
+                <span class="threat-label">DEFCON:</span>
+                <span class="threat-val" id="threatLevelVal">NORMAL</span>
+            </div>
+
+            <div class="posture-score-badge" id="hudPostureScore">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Posture Score: <strong id="postureScoreVal">95%</strong></span>
+            </div>
+
+            <div class="live-indicator" id="liveIndicator">
+                <span class="live-dot"></span>
+                <span>LIVE FEED</span>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <button class="btn btn-secondary btn-sm" id="btnRefresh" title="Refresh Telemetry">
+                <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnSimulateModal">
+                <i class="fa-solid fa-bolt"></i> Attack Simulator
+            </button>
+            
+            <!-- User Login / Profile Pill -->
+            <div class="user-pill" id="userPill" onclick="handleUserPillClick()">
+                <i class="fa-solid fa-user-shield text-cyan"></i>
+                <span id="userNameDisplay">Login</span>
+            </div>
+            <button class="btn btn-xs btn-outline" id="btnLogoutBtn" style="display:none;" onclick="logoutUser()" title="Sign Out">
+                <i class="fa-solid fa-right-from-bracket text-red"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="overview">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Command HUD</span>
+                </button>
+                <button class="nav-item" data-tab="events">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Live Event Log</span>
+                    <span class="badge badge-cyan" id="badgeEventsCount">0</span>
+                </button>
+                <button class="nav-item" data-tab="alerts">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Alert Center</span>
+                    <span class="badge badge-red" id="badgeAlertsCount">0</span>
+                </button>
+                <button class="nav-item" data-tab="applications">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>Connected Apps</span>
+                    <span class="badge badge-purple" id="badgeAppsCount">0</span>
+                </button>
+                <button class="nav-item" data-tab="simulator">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>Attack Lab</span>
+                </button>
+                <button class="nav-item" data-tab="integration">
+                    <i class="fa-solid fa-code"></i>
+                    <span>Integration Hub</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="api-info-card">
+                    <div class="api-info-title"><i class="fa-solid fa-server"></i> API Ingestion</div>
+                    <div class="api-info-endpoint">POST /api/security/events</div>
+                    <div class="api-info-note">Supports X-API-Key auth</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Toast Notifications Container -->
+            <div id="toastContainer" class="toast-container"></div>
+
+            <!-- TAB 1: COMMAND HUD / OVERVIEW -->
+            <section id="tab-overview" class="tab-pane active">
+                <!-- Metrics Counter Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon icon-blue"><i class="fa-solid fa-shield-virus"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Ingested Events</div>
+                            <div class="stat-value" id="statTotalEvents">0</div>
+                            <div class="stat-sub"><i class="fa-solid fa-arrow-trend-up text-cyan"></i> Real-time stream</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-red"><i class="fa-solid fa-biohazard"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Active Open Alerts</div>
+                            <div class="stat-value text-red" id="statActiveAlerts">0</div>
+                            <div class="stat-sub"><span id="statCriticalAlerts">0</span> Critical Severity</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-purple"><i class="fa-solid fa-cubes-stacked"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Connected Applications</div>
+                            <div class="stat-value text-purple" id="statRegisteredApps">0</div>
+                            <div class="stat-sub">Classmate microservices</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon icon-green"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-label">Events (Last 24 Hours)</div>
+                            <div class="stat-value text-green" id="statEvents24h">0</div>
+                            <div class="stat-sub">All active pipelines</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid-2col">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-line text-cyan"></i> Ingestion &amp; Threat Timeline</div>
+                            <span class="badge badge-outline">Hourly Volume</span>
+                        </div>
+                        <div class="card-body chart-box">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-pie text-purple"></i> Threat Severity Distribution</div>
+                            <span class="badge badge-outline">Live Breakdown</span>
+                        </div>
+                        <div class="card-body chart-box pie-box">
+                            <canvas id="severityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Critical Alerts & Connected Applications -->
+                <div class="grid-2col mt-4">
+                    <!-- Critical Alerts -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-triangle-exclamation text-red"></i> High Priority Threat Alerts</div>
+                            <button class="btn btn-xs btn-outline" onclick="switchTab('alerts')">View All</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-wrapper">
+                                <table class="custom-table" id="tableHudAlerts">
+                                    <thead>
+                                        <tr>
+                                            <th>Threat Type</th>
+                                            <th>Application</th>
+                                            <th>Attacker IP</th>
+                                            <th>Severity</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hudAlertsBody">
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">Loading active alerts...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Application Health -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-network-wired text-cyan"></i> Client Applications Status</div>
+                            <button class="btn btn-xs btn-outline" onclick="switchTab('applications')">Manage Apps</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-wrapper">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Application</th>
+                                            <th>Status</th>
+                                            <th>Events</th>
+                                            <th>API Key</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="hudAppsBody">
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">Loading connected apps...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: LIVE EVENT LOG -->
+            <section id="tab-events" class="tab-pane">
+                <div class="card">
+                    <div class="card-header flex-wrap">
+                        <div class="card-title">
+                            <i class="fa-solid fa-list-check text-cyan"></i> Ingested Security Event Stream
+                        </div>
+                        <div class="filter-group">
+                            <div class="search-input-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="eventSearchInput" placeholder="Search IP, user, endpoint...">
+                            </div>
+                            <select id="eventSeverityFilter" class="select-control">
+                                <option value="ALL">All Severities</option>
+                                <option value="CRITICAL">Critical Only</option>
+                                <option value="HIGH">High Only</option>
+                                <option value="MEDIUM">Medium Only</option>
+                                <option value="LOW">Low Only</option>
+                            </select>
+                            <select id="eventTypeFilter" class="select-control">
+                                <option value="ALL">All Event Types</option>
+                                <option value="FAILED_LOGIN">Failed Logins</option>
+                                <option value="SQL_INJECTION_ATTEMPT">SQL Injection</option>
+                                <option value="XSS_ATTEMPT">XSS Attempt</option>
+                                <option value="BRUTE_FORCE_ATTEMPT">Brute Force</option>
+                                <option value="RATE_LIMIT_EXCEEDED">Rate Limit</option>
+                                <option value="PORT_SCAN">Port Scan</option>
+                                <option value="LOGIN_SUCCESS">Login Success</option>
+                            </select>
+                            <button class="btn btn-sm btn-secondary" id="btnFilterSuspicious">
+                                <i class="fa-solid fa-skull-crossbones text-red"></i> Suspicious Only
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-wrapper">
+                            <table class="custom-table" id="tableEvents">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Application</th>
+                                        <th>Event Type</th>
+                                        <th>Severity</th>
+                                        <th>User</th>
+                                        <th>Source IP</th>
+                                        <th>Target Endpoint</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="eventsTableBody">
+                                    <tr><td colspan="8" class="text-center py-4 text-muted">Loading event log...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: ALERT CENTER & INCIDENT RESPONSE -->
+            <section id="tab-alerts" class="tab-pane">
+                <div class="card">
+                    <div class="card-header flex-wrap">
+                        <div class="card-title">
+                            <i class="fa-solid fa-shield-virus text-red"></i> Incident Response &amp; Threat Alerts
+                        </div>
+                        <div class="filter-group">
+                            <select id="alertStatusFilter" class="select-control">
+                                <option value="ALL">All Statuses</option>
+                                <option value="OPEN" selected>Open Alerts</option>
+                                <option value="ACKNOWLEDGED">Acknowledged</option>
+                                <option value="RESOLVED">Resolved</option>
+                            </select>
+                            <select id="alertSeverityFilter" class="select-control">
+                                <option value="ALL">All Severities</option>
+                                <option value="CRITICAL">Critical</option>
+                                <option value="HIGH">High</option>
+                                <option value="MEDIUM">Medium</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-wrapper">
+                            <table class="custom-table" id="tableAlerts">
+                                <thead>
+                                    <tr>
+                                        <th>Alert ID</th>
+                                        <th>Detected Time</th>
+                                        <th>Target App</th>
+                                        <th>Threat Title</th>
+                                        <th>Severity</th>
+                                        <th>Attacker IP</th>
+                                        <th>Target Account</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alertsTableBody">
+                                    <tr><td colspan="9" class="text-center py-4 text-muted">Loading alerts...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: CONNECTED CLIENT APPLICATIONS -->
+            <section id="tab-applications" class="tab-pane">
+                <div class="flex-between mb-4">
+                    <div>
+                        <h2>Connected Client Applications</h2>
+                        <p class="text-muted">Manage registered microservices and generate client API keys for classmate projects.</p>
+                    </div>
+                    <button class="btn btn-primary" id="btnOpenNewAppModal">
+                        <i class="fa-solid fa-plus"></i> Register Application
+                    </button>
+                </div>
+
+                <div class="apps-grid" id="appsGridContainer">
+                    <!-- Dynamic Application Cards -->
+                </div>
+            </section>
+
+            <!-- TAB 5: ATTACK SIMULATION LAB -->
+            <section id="tab-simulator" class="tab-pane">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-flask-vial text-cyan"></i> Attack Scenario Simulation Lab</div>
+                        <span class="badge badge-purple">Real-Time Demonstration Engine</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            Simulate realistic cyber attack vectors against the ingestion engine. The heuristic engine will analyze payloads, calculate threat vectors, and trigger alerts in real-time.
+                        </p>
+
+                        <div class="scenario-grid">
+                            <!-- Scenario 1: SQL Injection -->
+                            <div class="scenario-card" onclick="setScenario('SQL_INJECTION')">
+                                <div class="scenario-icon text-red"><i class="fa-solid fa-database"></i></div>
+                                <div class="scenario-title">SQL Injection Attack</div>
+                                <div class="scenario-desc">Simulates UNION SELECT injection attempting to breach credentials table.</div>
+                                <span class="badge badge-red">CRITICAL Threat</span>
+                            </div>
+
+                            <!-- Scenario 2: Brute Force -->
+                            <div class="scenario-card" onclick="setScenario('BRUTE_FORCE')">
+                                <div class="scenario-icon text-amber"><i class="fa-solid fa-key"></i></div>
+                                <div class="scenario-title">Brute Force Authentication</div>
+                                <div class="scenario-desc">Dispatches 4 rapid failed login attempts to trigger credential stuffing heuristics.</div>
+                                <span class="badge badge-red">CRITICAL Alert</span>
+                            </div>
+
+                            <!-- Scenario 3: Stored XSS -->
+                            <div class="scenario-card" onclick="setScenario('XSS')">
+                                <div class="scenario-icon text-cyan"><i class="fa-solid fa-code"></i></div>
+                                <div class="scenario-title">Cross-Site Scripting (XSS)</div>
+                                <div class="scenario-desc">Injects malicious script tag payload aimed at session token exfiltration.</div>
+                                <span class="badge badge-cyan">HIGH Threat</span>
+                            </div>
+
+                            <!-- Scenario 4: DoS Burst -->
+                            <div class="scenario-card" onclick="setScenario('DOS_BURST')">
+                                <div class="scenario-icon text-purple"><i class="fa-solid fa-water"></i></div>
+                                <div class="scenario-title">Rate Limit / DoS Burst</div>
+                                <div class="scenario-desc">Floods rapid requests from a single IP address to trigger rate limiting.</div>
+                                <span class="badge badge-purple">HIGH Alert</span>
+                            </div>
+
+                            <!-- Scenario 5: Port Scan -->
+                            <div class="scenario-card" onclick="setScenario('PORT_SCAN')">
+                                <div class="scenario-icon text-green"><i class="fa-solid fa-radar"></i></div>
+                                <div class="scenario-title">Port Scan &amp; Recon</div>
+                                <div class="scenario-desc">Simulates automated port enumeration and sensitive endpoint probing.</div>
+                                <span class="badge badge-green">HIGH Alert</span>
+                            </div>
+                        </div>
+
+                        <div class="simulator-controls mt-4">
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label>Selected Scenario</label>
+                                    <select id="simScenarioSelect" class="input-control">
+                                        <option value="SQL_INJECTION">SQL Injection Attack</option>
+                                        <option value="BRUTE_FORCE">Brute Force Authentication</option>
+                                        <option value="XSS">Cross-Site Scripting (XSS)</option>
+                                        <option value="DOS_BURST">Rate Limit / DoS Burst</option>
+                                        <option value="PORT_SCAN">Port Scan &amp; Reconnaissance</option>
+                                    </select>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label>Target Application</label>
+                                    <select id="simAppSelect" class="input-control">
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label>Target Username</label>
+                                    <input type="text" id="simTargetUser" class="input-control" value="admin_user">
+                                </div>
+                            </div>
+
+                            <button class="btn btn-red btn-lg w-100 mt-3" id="btnLaunchSimulation">
+                                <i class="fa-solid fa-skull"></i> Execute Simulated Attack Vector
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Output Terminal -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-terminal text-green"></i> Live Threat Telemetry Console</div>
+                        <button class="btn btn-xs btn-outline" id="btnClearTerminal">Clear</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="terminal-box" id="terminalOutput">
+                            <div class="terminal-line text-muted">[SYSTEM] AegisGuard Telemetry Engine initialized. Ready to process simulated packets.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: CLASSMATE INTEGRATION HUB -->
+            <section id="tab-integration" class="tab-pane">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-book-bookmark text-cyan"></i> Classmate Integration Guide &amp; Code Generator</div>
+                        <span class="badge badge-green">Zero-Friction SDK</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            Classmates can connect their Spring Boot, Python, Node.js, or React applications to this security platform by sending a single HTTP POST request whenever an event occurs (e.g. failed login, admin access, password change).
+                        </p>
+
+                        <div class="integration-steps">
+                            <div class="step-badge">1. API Endpoint</div>
+                            <div class="code-banner">POST http://localhost:8080/api/security/events</div>
+
+                            <div class="step-badge mt-3">2. Header Authentication</div>
+                            <div class="code-banner">X-API-Key: SEC-APP-QUIZ778899AA</div>
+
+                            <div class="step-badge mt-3">3. Sample Request Body (JSON)</div>
+                            <div class="code-box">
+<pre><code>{
+  "eventType": "FAILED_LOGIN",
+  "username": "student_alex",
+  "ipAddress": "192.168.1.15",
+  "endpoint": "/api/quiz/auth",
+  "description": "Invalid credentials provided for student_alex"
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <!-- Code Snippet Selector -->
+                        <div class="code-tabs-header mt-4">
+                            <button class="code-tab-btn active" data-lang="java">Java (Spring Boot RestClient)</button>
+                            <button class="code-tab-btn" data-lang="python">Python (Requests)</button>
+                            <button class="code-tab-btn" data-lang="js">JavaScript (Fetch)</button>
+                            <button class="code-tab-btn" data-lang="curl">cURL</button>
+                        </div>
+
+                        <div class="code-box code-content-pane active" id="code-java">
+<pre><code>// In your Spring Boot project (Quiz App / Student Portal):
+RestClient restClient = RestClient.create();
+
+Map&lt;String, Object&gt; event = Map.of(
+    "eventType", "FAILED_LOGIN",
+    "username", "user123",
+    "ipAddress", request.getRemoteAddr(),
+    "endpoint", "/api/login",
+    "description", "Failed login attempt detected"
+);
+
+restClient.post()
+    .uri("http://localhost:8080/api/security/events")
+    .header("X-API-Key", "SEC-APP-YOUR-KEY-HERE")
+    .body(event)
+    .retrieve()
+    .toBodilessEntity();</code></pre>
+                        </div>
+
+                        <div class="code-box code-content-pane" id="code-python">
+<pre><code>import requests
+
+event_payload = {
+    "eventType": "FAILED_LOGIN",
+    "username": "user123",
+    "ipAddress": "192.168.1.50",
+    "endpoint": "/auth/login",
+    "description": "User login failure"
+}
+
+headers = {
+    "X-API-Key": "SEC-APP-YOUR-KEY-HERE",
+    "Content-Type": "application/json"
+}
+
+response = requests.post("http://localhost:8080/api/security/events", json=event_payload, headers=headers)
+print("Security API Response:", response.json())</code></pre>
+                        </div>
+
+                        <div class="code-box code-content-pane" id="code-js">
+<pre><code>fetch("http://localhost:8080/api/security/events", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-API-Key": "SEC-APP-YOUR-KEY-HERE"
+  },
+  body: JSON.stringify({
+    eventType: "FAILED_LOGIN",
+    username: "user123",
+    ipAddress: "192.168.1.50",
+    endpoint: "/api/login",
+    description: "Invalid credentials"
+  })
+})
+.then(res => res.json())
+.then(data => console.log("Event ingested:", data));</code></pre>
+                        </div>
+
+                        <div class="code-box code-content-pane" id="code-curl">
+<pre><code>curl -X POST http://localhost:8080/api/security/events \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: SEC-APP-QUIZ778899AA" \
+  -d '{
+    "eventType": "FAILED_LOGIN",
+    "username": "attacker",
+    "ipAddress": "192.168.1.100",
+    "endpoint": "/api/admin/login",
+    "description": "Admin login failure"
+  }'</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Live Event Sender Sandbox -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-paper-plane text-cyan"></i> Live Event Dispatcher Sandbox</div>
+                        <span class="badge badge-outline">Test Custom Packets</span>
+                    </div>
+                    <div class="card-body">
+                        <form id="formCustomEvent">
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label>Client API Key</label>
+                                    <input type="text" id="customApiKey" class="input-control" placeholder="SEC-APP-..." required>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label>Event Type</label>
+                                    <select id="customEventType" class="input-control">
+                                        <option value="LOGIN_SUCCESS">LOGIN_SUCCESS</option>
+                                        <option value="FAILED_LOGIN">FAILED_LOGIN</option>
+                                        <option value="SQL_INJECTION_ATTEMPT">SQL_INJECTION_ATTEMPT</option>
+                                        <option value="XSS_ATTEMPT">XSS_ATTEMPT</option>
+                                        <option value="RATE_LIMIT_EXCEEDED">RATE_LIMIT_EXCEEDED</option>
+                                        <option value="PORT_SCAN">PORT_SCAN</option>
+                                        <option value="UNAUTHORIZED_ACCESS">UNAUTHORIZED_ACCESS</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group flex-1">
+                                    <label>Username (Optional)</label>
+                                    <input type="text" id="customUsername" class="input-control" placeholder="e.g. student_01">
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label>Source IP Address</label>
+                                    <input type="text" id="customIp" class="input-control" value="192.168.1.15" required>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label>Endpoint</label>
+                                    <input type="text" id="customEndpoint" class="input-control" value="/api/quiz/submit">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Request Payload / Description</label>
+                                <textarea id="customDescription" class="input-control" rows="2" placeholder="Describe the event or enter simulated payload..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-satellite-dish"></i> Dispatch Security Event
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: Register New Application -->
+    <div class="modal-overlay" id="modalNewApp">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-plus-circle text-purple"></i> Register Client Application</div>
+                <button class="modal-close" onclick="closeModal('modalNewApp')">&times;</button>
+            </div>
+            <form id="formRegisterApp">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Application Name <span class="text-red">*</span></label>
+                        <input type="text" id="newAppName" class="input-control" placeholder="e.g. Quiz System Microservice" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="newAppDesc" class="input-control" placeholder="Brief summary of classmate project">
+                    </div>
+                    <div class="form-group">
+                        <label>Owner / Maintainer Email</label>
+                        <input type="email" id="newAppEmail" class="input-control" placeholder="classmate@college.edu">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalNewApp')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Generate API Key &amp; Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Resolve Alert -->
+    <div class="modal-overlay" id="modalResolveAlert">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-shield-check text-green"></i> Resolve Threat Alert</div>
+                <button class="modal-close" onclick="closeModal('modalResolveAlert')">&times;</button>
+            </div>
+            <form id="formResolveAlert">
+                <input type="hidden" id="resolveAlertId">
+                <div class="modal-body">
+                    <div class="alert-info-box" id="resolveAlertSummary"></div>
+                    <div class="form-group mt-3">
+                        <label>Resolution Status</label>
+                        <select id="resolveStatusSelect" class="input-control">
+                            <option value="RESOLVED">RESOLVED (Threat Mitigated)</option>
+                            <option value="ACKNOWLEDGED">ACKNOWLEDGED (Under Investigation)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Resolution Notes / Action Taken</label>
+                        <textarea id="resolveNotes" class="input-control" rows="3" placeholder="e.g., Blocked IP on firewall, reset user password, patched query..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalResolveAlert')">Cancel</button>
+                    <button type="submit" class="btn btn-green">Confirm Resolution</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="./js/app.js"></script>
+</body>
+</html>

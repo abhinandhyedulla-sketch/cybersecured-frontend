@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisGuard | Security Operations Sign In</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="auth-body">
+    <!-- Background Ambient Glows -->
+    <div class="auth-ambient-glow glow-1"></div>
+    <div class="auth-ambient-glow glow-2"></div>
+
+    <div class="auth-wrapper">
+        <!-- Brand Header -->
+        <div class="auth-brand">
+            <div class="brand-logo lg">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="pulse-ring"></span>
+            </div>
+            <h1 class="auth-title">AEGIS<span class="highlight">GUARD</span></h1>
+            <p class="auth-subtitle">Central Cyber Threat Detection &amp; SOC Platform</p>
+        </div>
+
+        <!-- Auth Card -->
+        <div class="auth-card">
+            <!-- Tabs (Sign In / Register) -->
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tabSignInBtn" onclick="switchAuthMode('login')">
+                    <i class="fa-solid fa-lock"></i> Sign In
+                </button>
+                <button class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthMode('register')">
+                    <i class="fa-solid fa-user-plus"></i> Register
+                </button>
+            </div>
+
+            <!-- Error / Success Alert Banner -->
+            <div id="authAlert" class="auth-alert" style="display:none;"></div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginUsername"><i class="fa-solid fa-user text-cyan"></i> Username</label>
+                    <input type="text" id="loginUsername" class="input-control" placeholder="Enter username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fa-solid fa-key text-cyan"></i> Password</label>
+                    <div class="password-input-wrap">
+                        <input type="password" id="loginPassword" class="input-control" placeholder="Enter password" required autocomplete="current-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('loginPassword', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="auth-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe" checked>
+                        <span>Remember session</span>
+                    </label>
+                    <button type="button" class="quick-fill-btn" onclick="fillDemoCredentials()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Demo Admin
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 mt-3" id="btnLoginSubmit">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="regUsername"><i class="fa-solid fa-user text-cyan"></i> Username <span class="text-red">*</span></label>
+                    <input type="text" id="regUsername" class="input-control" placeholder="Choose unique username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail"><i class="fa-solid fa-envelope text-cyan"></i> Email Address <span class="text-red">*</span></label>
+                    <input type="email" id="regEmail" class="input-control" placeholder="user@college.edu" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword"><i class="fa-solid fa-lock text-cyan"></i> Password <span class="text-red">*</span></label>
+                    <div class="password-input-wrap">
+                        <input type="password" id="regPassword" class="input-control" placeholder="At least 6 characters" required autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('regPassword', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-purple btn-lg w-100 mt-3" id="btnRegisterSubmit">
+                    <i class="fa-solid fa-user-plus"></i> Create Account
+                </button>
+            </form>
+
+            <!-- On-Card AI Help & Quick Support Guide -->
+            <div class="auth-ai-help-card">
+                <div class="auth-ai-help-header" onclick="toggleAuthAiHelp()">
+                    <div class="auth-ai-help-title">
+                        <i class="fa-solid fa-robot text-cyan"></i>
+                        <span>AI Help &amp; Instant Support</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-muted" id="aiHelpChevron"></i>
+                </div>
+                <div class="auth-ai-help-body" id="authAiHelpBody" style="display:none;">
+                    <div class="auth-ai-faq-item">
+                        <strong><i class="fa-solid fa-key text-cyan"></i> Default Admin Credentials</strong>
+                        <span>Username: <code>admin</code> | Password: <code>admin123</code></span>
+                        <button type="button" class="ai-quick-action-btn" onclick="fillDemoCredentials()">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Form
+                        </button>
+                    </div>
+                    <div class="auth-ai-faq-item">
+                        <strong><i class="fa-solid fa-plug text-purple"></i> Classmate API Integration</strong>
+                        <span>Need to connect your project? Register your application inside Command Center to obtain an <code>X-API-Key</code>.</span>
+                    </div>
+                    <div class="auth-ai-faq-item">
+                        <strong><i class="fa-solid fa-comments text-green"></i> Need Interactive Help?</strong>
+                        <span>Click the floating <b>Aegis AI Assistant</b> button at the bottom right to chat with SOC AI!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Footer Info -->
+            <div class="auth-card-footer">
+                <div class="jwt-badge-info">
+                    <i class="fa-solid fa-shield-check text-green"></i>
+                    <span>Secure Access Control &amp; Incident Authorization</span>
+                </div>
+                <div class="guest-link">
+                    <a href="index.html"><i class="fa-solid fa-gauge"></i> Enter Command Center (Direct Mode)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AI Support Assistant FAB -->
+    <button class="ai-support-fab" id="btnOpenAiSupport" onclick="toggleAiChat()">
+        <div class="ai-fab-icon-wrap">
+            <span class="ai-fab-pulse"></span>
+            <i class="fa-solid fa-robot"></i>
+        </div>
+        <span>AI Help &amp; Support</span>
+        <span class="ai-fab-badge">Online</span>
+    </button>
+
+    <!-- Floating AI Chat Assistant Window -->
+    <div class="ai-chat-window" id="aiChatWindow">
+        <!-- Header -->
+        <div class="ai-chat-header">
+            <div class="ai-header-left">
+                <div class="ai-header-avatar">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div class="ai-header-info">
+                    <h4>Aegis SOC AI Copilot</h4>
+                    <div class="ai-status-indicator">
+                        <span class="ai-status-dot"></span>
+                        <span>Active &bull; Ready to Assist</span>
+                    </div>
+                </div>
+            </div>
+            <div class="ai-header-actions">
+                <button class="ai-icon-btn" onclick="clearAiChat()" title="Clear Chat History">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <button class="ai-icon-btn" onclick="toggleAiChat()" title="Close Assistant">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Stream Body -->
+        <div class="ai-chat-body" id="aiChatBody">
+            <div class="ai-msg bot">
+                <div class="ai-msg-avatar">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="ai-msg-bubble">
+                    Greetings! I am the <strong>AegisGuard SOC AI Support Assistant</strong>. 🛡️<br><br>
+                    How can I assist you today? You can ask about credentials, connecting external apps, attack simulation, or system architecture.
+                    <div class="mt-3">
+                        <button class="ai-quick-action-btn" onclick="handleAiPrompt('default login')">
+                            <i class="fa-solid fa-key"></i> Show Admin Credentials
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Prompt Chips -->
+        <div class="ai-quick-prompts">
+            <button class="ai-prompt-chip" onclick="handleAiPrompt('What are the default login credentials?')">
+                <i class="fa-solid fa-key text-cyan"></i> Default Login
+            </button>
+            <button class="ai-prompt-chip" onclick="handleAiPrompt('How do I connect my classmate app?')">
+                <i class="fa-solid fa-plug text-purple"></i> Connect App
+            </button>
+            <button class="ai-prompt-chip" onclick="handleAiPrompt('How does DEFCON and threat score work?')">
+                <i class="fa-solid fa-heart-pulse text-red"></i> DEFCON Score
+            </button>
+            <button class="ai-prompt-chip" onclick="handleAiPrompt('What attacks does AegisGuard detect?')">
+                <i class="fa-solid fa-crosshairs text-amber"></i> Attack Types
+            </button>
+            <button class="ai-prompt-chip" onclick="handleAiPrompt('I forgot my password or need help registering')">
+                <i class="fa-solid fa-circle-question text-green"></i> Account Help
+            </button>
+        </div>
+
+        <!-- Chat Input Field -->
+        <form class="ai-chat-input-bar" id="aiChatForm" onsubmit="submitAiMessage(event)">
+            <input type="text" class="ai-input-field" id="aiChatInput" placeholder="Ask AI about login, API, alerts, or defense..." autocomplete="off">
+            <button type="submit" class="ai-send-btn" title="Send Question">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Automatically adapt API Base URL
+        const API_BASE = (window.location.port === '8080' || window.location.port === '3000')
+            ? '/api'
+            : (window.__API_BASE__ || 'http://localhost:8080/api');
+
+        // Check if already authenticated
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('aegis_jwt_token');
+            if (token) {
+                fetch(`${API_BASE}/auth/verify`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.valid) {
+                        showAuthAlert(`Signed in as ${data.username}. <a href="index.html" style="color:#06b6d4;font-weight:700;">Click here to enter Command Center</a>`, 'success');
+                    }
+                })
+                .catch(() => {});
+            }
+        });
+
+        function toggleAuthAiHelp() {
+            const body = document.getElementById('authAiHelpBody');
+            const icon = document.getElementById('aiHelpChevron');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.className = 'fa-solid fa-chevron-up text-cyan';
+            } else {
+                body.style.display = 'none';
+                icon.className = 'fa-solid fa-chevron-down text-muted';
+            }
+        }
+
+        function toggleAiChat() {
+            const chatWin = document.getElementById('aiChatWindow');
+            chatWin.classList.toggle('active');
+            if (chatWin.classList.contains('active')) {
+                document.getElementById('aiChatInput').focus();
+            }
+        }
+
+        function clearAiChat() {
+            const body = document.getElementById('aiChatBody');
+            body.innerHTML = `
+                <div class="ai-msg bot">
+                    <div class="ai-msg-avatar">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="ai-msg-bubble">
+                        Chat history cleared. I'm ready for your next question! Ask me anything regarding AegisGuard security operations.
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchAuthMode(mode) {
+            const tabSignIn = document.getElementById('tabSignInBtn');
+            const tabRegister = document.getElementById('tabRegisterBtn');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            hideAuthAlert();
+
+            if (mode === 'login') {
+                tabSignIn.classList.add('active');
+                tabRegister.classList.remove('active');
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+            } else {
+                tabSignIn.classList.remove('active');
+                tabRegister.classList.add('active');
+                loginForm.classList.remove('active');
+                registerForm.classList.add('active');
+            }
+        }
+
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function fillDemoCredentials() {
+            switchAuthMode('login');
+            document.getElementById('loginUsername').value = 'admin';
+            document.getElementById('loginPassword').value = 'admin123';
+            showAuthAlert('Demo credentials filled: admin / admin123', 'info');
+        }
+
+        // ==========================================
+        // Intelligent AI Knowledge Base & Chat Engine
+        // ==========================================
+        function handleAiPrompt(promptText) {
+            const chatWin = document.getElementById('aiChatWindow');
+            if (!chatWin.classList.contains('active')) {
+                chatWin.classList.add('active');
+            }
+            sendUserMessage(promptText);
+        }
+
+        function submitAiMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('aiChatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            sendUserMessage(text);
+        }
+
+        function appendUserMessage(text) {
+            const chatBody = document.getElementById('aiChatBody');
+            const msgEl = document.createElement('div');
+            msgEl.className = 'ai-msg user';
+            msgEl.innerHTML = `
+                <div class="ai-msg-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="ai-msg-bubble">${escapeHtml(text)}</div>
+            `;
+            chatBody.appendChild(msgEl);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function appendBotMessage(htmlContent) {
+            const chatBody = document.getElementById('aiChatBody');
+            const msgEl = document.createElement('div');
+            msgEl.className = 'ai-msg bot';
+            msgEl.innerHTML = `
+                <div class="ai-msg-avatar">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="ai-msg-bubble">${htmlContent}</div>
+            `;
+            chatBody.appendChild(msgEl);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatBody = document.getElementById('aiChatBody');
+            const indicator = document.createElement('div');
+            indicator.id = 'aiTypingIndicator';
+            indicator.className = 'ai-msg bot';
+            indicator.innerHTML = `
+                <div class="ai-msg-avatar"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="ai-typing-indicator">
+                    <span class="ai-typing-dot"></span>
+                    <span class="ai-typing-dot"></span>
+                    <span class="ai-typing-dot"></span>
+                </div>
+            `;
+            chatBody.appendChild(indicator);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('aiTypingIndicator');
+            if (el) el.remove();
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function generateAiResponse(query) {
+            const q = query.toLowerCase();
+
+            if (q.includes('credential') || q.includes('login') || q.includes('admin') || q.includes('password') && (q.includes('default') || q.includes('what'))) {
+                return `
+                    <strong>Default Administrator Account:</strong><br>
+                    &bull; <b>Username:</b> <code>admin</code><br>
+                    &bull; <b>Password:</b> <code>admin123</code><br>
+                    &bull; <b>Role:</b> <code>ROLE_ADMIN</code><br><br>
+                    You can click below to automatically populate the sign-in form:
+                    <br>
+                    <button class="ai-quick-action-btn" onclick="fillDemoCredentials()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Demo Credentials
+                    </button>
+                `;
+            }
+
+            if (q.includes('register') || q.includes('create account') || q.includes('signup') || q.includes('sign up') || q.includes('new user')) {
+                return `
+                    <strong>Creating a New Security Operator Account:</strong><br>
+                    1. Click on the <b>Register</b> tab on the login card.<br>
+                    2. Choose a unique username and email.<br>
+                    3. Choose a secure password (min 6 chars).<br>
+                    4. Your session will be automatically authenticated with a signed JWT token upon registration.<br><br>
+                    <button class="ai-quick-action-btn" onclick="switchAuthMode('register')">
+                        <i class="fa-solid fa-user-plus"></i> Switch to Register Tab
+                    </button>
+                `;
+            }
+
+            if (q.includes('connect') || q.includes('classmate') || q.includes('api') || q.includes('integration') || q.includes('microservice') || q.includes('key')) {
+                return `
+                    <strong>How to Connect External Projects / Microservices:</strong><br>
+                    1. Sign in as <code>admin</code> to open the <b>Command Center</b>.<br>
+                    2. Go to <b>Integration Hub</b> or <b>Connected Apps</b>.<br>
+                    3. Click <b>Register Application</b> to get a unique <code>X-API-Key</code> (e.g. <code>SEC-APP-XXX</code>).<br>
+                    4. In your classmate app (Java, Python, Node.js, PHP, etc.), make a POST request to:<br>
+                    <div class="ai-code-block">POST http://localhost:8080/api/security/events\nHeader: X-API-Key: &lt;API_KEY&gt;</div>
+                `;
+            }
+
+            if (q.includes('attack') || q.includes('simulator') || q.includes('simulate') || q.includes('sql') || q.includes('brute') || q.includes('xss') || q.includes('rate')) {
+                return `
+                    <strong>Supported Threat Detection Heuristics:</strong><br>
+                    &bull; <b>Brute Force Attack:</b> Detects &ge; 3 failed logins within 5 mins for same user/IP.<br>
+                    &bull; <b>Rate Limit Spike:</b> Detects &ge; 20 requests in 60s window from an IP.<br>
+                    &bull; <b>SQL Injection:</b> Detects regex patterns (<code>' OR 1=1</code>, <code>UNION SELECT</code>, <code>DROP TABLE</code>).<br>
+                    &bull; <b>XSS (Cross-Site Scripting):</b> Detects <code>&lt;script&gt;</code> and <code>javascript:</code> injections.<br>
+                    &bull; <b>Port Scan / Unauthorized Probing:</b> Flags suspicious port probes and endpoint enumeration.
+                `;
+            }
+
+            if (q.includes('defcon') || q.includes('posture') || q.includes('score') || q.includes('hud') || q.includes('level')) {
+                return `
+                    <strong>DEFCON &amp; Posture Score System:</strong><br>
+                    &bull; <b>DEFCON 5 (Normal):</b> No critical unresolved threats. Posture 90% - 100%.<br>
+                    &bull; <b>DEFCON 3 (Elevated):</b> Moderate threats detected (brute force or rate limit anomalies).<br>
+                    &bull; <b>DEFCON 1 (Critical):</b> Severe SQL injection or active breach attempt in progress.<br>
+                    &bull; As you resolve alerts in the <b>Alert Center</b>, your security posture score automatically recovers!
+                `;
+            }
+
+            if (q.includes('forgot') || q.includes('reset') || q.includes('stuck') || q.includes('cannot login') || q.includes('invalid')) {
+                return `
+                    <strong>Troubleshooting Login Issues:</strong><br>
+                    &bull; <b>Default Admin:</b> Try <code>admin</code> / <code>admin123</code>.<br>
+                    &bull; <b>In-Memory Database:</b> The default database resets each time the server restarts. If you created a custom user previously, it resets to default seed accounts on fresh startup.<br>
+                    &bull; <b>Guest Direct Mode:</b> You can also enter directly via the Command Center link below.
+                `;
+            }
+
+            if (q.includes('h2') || q.includes('database') || q.includes('sql')) {
+                return `
+                    <strong>Database Access:</strong><br>
+                    The embedded H2 Web Console is available at <a href="/h2-console" target="_blank" style="color:#06b6d4;">/h2-console</a>.<br>
+                    &bull; <b>JDBC URL:</b> <code>jdbc:h2:mem:cybersecdb</code><br>
+                    &bull; <b>Username:</b> <code>sa</code><br>
+                    &bull; <b>Password:</b> (Leave empty)
+                `;
+            }
+
+            // General SOC Assistant Response
+            return `
+                <strong>Aegis AI Telemetry Engine:</strong><br>
+                I understand you asked about: <em>"${escapeHtml(query)}"</em>.<br><br>
+                AegisGuard SOC platform monitors real-time telemetry across all student microservices, identifies zero-day payloads, and correlates security logs.<br><br>
+                &bull; Sign in with <code>admin</code> / <code>admin123</code> to access live charts, alert triage, and the attack sandbox!
+                <br>
+                <button class="ai-quick-action-btn" onclick="fillDemoCredentials()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-fill Demo Admin
+                </button>
+            `;
+        }
+
+        function sendUserMessage(text) {
+            appendUserMessage(text);
+            showTypingIndicator();
+
+            setTimeout(() => {
+                removeTypingIndicator();
+                const reply = generateAiResponse(text);
+                appendBotMessage(reply);
+            }, 550);
+        }
+
+        // Handle Login Submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const submitBtn = document.getElementById('btnLoginSubmit');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';
+            hideAuthAlert();
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!res.ok) {
+                    throw new Error('Invalid username or password credentials');
+                }
+
+                const data = await res.json();
+                localStorage.setItem('aegis_jwt_token', data.token);
+                localStorage.setItem('aegis_user_info', JSON.stringify({
+                    username: data.username,
+                    email: data.email,
+                    role: data.role
+                }));
+
+                showAuthAlert(`Welcome back, ${data.username}! Redirecting...`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+
+            } catch (err) {
+                showAuthAlert(err.message, 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
+            }
+        });
+
+        // Handle Register Submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const submitBtn = document.getElementById('btnRegisterSubmit');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account...';
+            hideAuthAlert();
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Registration failed. Username or email may already exist.');
+                }
+
+                const data = await res.json();
+                localStorage.setItem('aegis_jwt_token', data.token);
+                localStorage.setItem('aegis_user_info', JSON.stringify({
+                    username: data.username,
+                    email: data.email,
+                    role: data.role
+                }));
+
+                showAuthAlert(`Account created! Welcome, ${data.username}. Redirecting...`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+
+            } catch (err) {
+                showAuthAlert(err.message, 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account';
+            }
+        });
+
+        function showAuthAlert(msg, type) {
+            const banner = document.getElementById('authAlert');
+            banner.className = `auth-alert auth-alert-${type}`;
+            banner.innerHTML = msg;
+            banner.style.display = 'block';
+        }
+
+        function hideAuthAlert() {
+            const banner = document.getElementById('authAlert');
+            banner.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
