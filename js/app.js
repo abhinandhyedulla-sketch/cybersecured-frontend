@@ -3,11 +3,11 @@
  */
 
 // Automatically adapt API Base URL:
-// - If running on Spring Boot directly (port 8080) or Vite dev proxy (port 3000) -> use '/api'
-// - If running on Live Server / other port -> direct to 'http://localhost:8080/api'
+// - If running on localhost port 8080 or Vite dev proxy 3000 -> use '/api'
+// - Otherwise (GitHub Pages, external devices, etc.) -> use live backend tunnel
 const API_BASE = (window.location.port === '8080' || window.location.port === '3000')
     ? '/api'
-    : (window.__API_BASE__ || 'http://localhost:8080/api');
+    : (window.__API_BASE__ || 'https://carl-substantially-providence-josh.trycloudflare.com/api');
 let timelineChart = null;
 let severityChart = null;
 let currentApps = [];
